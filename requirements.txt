@@ -1,0 +1,10 @@
+tornado
+psycopg2-binary
+pytest
+pytest-tornado
+pytest-asyncio
+sqlalchemy
+python-decouple
+requests
+pyjwt
+bcrypt
