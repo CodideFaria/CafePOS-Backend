@@ -24,6 +24,10 @@ class OrdersHandler(BaseHandler):
         try:
             orders = self.order_controller.get_orders_by_filters(all=True)
             
+            # Handle case where no orders exist
+            if orders is None:
+                orders = {'amount': 0, 'orders': []}
+            
             # In a real implementation, apply filters here
             mock_orders = orders.get('orders', [])
             
@@ -79,16 +83,17 @@ class OrdersHandler(BaseHandler):
             order_data = {
                 'user_id': data.get('createdBy', 'system'),
                 'subtotal': subtotal,
-                'tax': tax_amount,
-                'total': total,
+                'tax_amount': tax_amount,
+                'total_amount': total,
                 'discount_amount': data.get('discountAmount', 0),
                 'discount_reason': data.get('discountReason'),
-                'status': 'PAID',
+                'status': 'completed',  # Use correct enum value
                 'payment_method': payment_method,
                 'amount_paid': data.get('amountPaid', total),
                 'change_given': data.get('changeGiven', 0),
                 'customer_name': data.get('customerName'),
-                'order_notes': data.get('orderNotes')
+                'order_notes': data.get('orderNotes'),
+                'items': items  # Pass the items to the controller
             }
 
             new_order = self.order_controller.create_order(**order_data)
@@ -106,7 +111,7 @@ class OrdersHandler(BaseHandler):
                     "paymentMethod": payment_method,
                     "amountPaid": data.get('amountPaid', total),
                     "changeGiven": data.get('changeGiven', 0),
-                    "status": "PAID",
+                    "status": "completed",
                     "customerName": data.get('customerName'),
                     "orderNotes": data.get('orderNotes'),
                     "createdBy": data.get('createdBy'),
@@ -120,7 +125,7 @@ class OrdersHandler(BaseHandler):
             self.write_success(order_response, 201, "Order created successfully")
 
         except Exception as e:
-            self.write_error_response(["Failed to create order"], 500, "INTERNAL_ERROR")
+            self.write_error_response([f"Failed to create order - {e}"], 500, "INTERNAL_ERROR")
 
 
 class OrderHandler(BaseHandler):

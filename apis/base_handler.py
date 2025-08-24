@@ -8,9 +8,18 @@ from orm.db_init import session_scope
 class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Content-Type", 'application/json; charset="utf-8"')
-        self.set_header("Access-Control-Allow-Origin", "http://localhost:5173")
+        
+        # Allow both common frontend development ports
+        origin = self.request.headers.get("Origin", "")
+        allowed_origins = ["http://localhost:3000", "http://localhost:5173"]
+        if origin in allowed_origins:
+            self.set_header("Access-Control-Allow-Origin", origin)
+        else:
+            # Default fallback for development
+            self.set_header("Access-Control-Allow-Origin", "http://localhost:3000")
+            
         self.set_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-        self.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        self.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
         self.set_header("Access-Control-Allow-Credentials", "true")
 
     def options(self, *args):

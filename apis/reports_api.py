@@ -3,6 +3,8 @@ from datetime import datetime, timezone, timedelta
 from apis.base_handler import BaseHandler
 from orm.controllers.controller_orders import OrderController
 from orm.controllers.controller_menu import MenuController
+from services.email_service import email_service
+from services.scheduler_service import scheduler_service
 
 
 class SalesDashboardHandler(BaseHandler):
@@ -105,61 +107,43 @@ class DailySalesHandler(BaseHandler):
         date = self.get_argument('date', datetime.now().strftime('%Y-%m-%d'))
 
         try:
-            # Mock daily sales data
-            mock_data = {
-                "date": date,
-                "summary": {
-                    "totalRevenue": 1250.75,
-                    "totalTransactions": 28,
-                    "averageOrderValue": 44.67,
-                    "taxCollected": 187.61,
-                    "discountsGiven": 35.50,
-                    "refundsProcessed": 12.00,
-                    "paymentMethods": {
-                        "cash": 750.25,
-                        "card": 500.50
-                    }
-                },
-                "hourlyBreakdown": [
-                    {
-                        "hour": 8,
-                        "revenue": 150.00,
-                        "transactions": 3,
-                        "averageOrderValue": 50.00
+            # Get real daily sales data from database
+            sales_data = self.order_controller.get_daily_sales_data(date)
+            
+            if sales_data is None:
+                # Return empty but valid structure if no data
+                sales_data = {
+                    "date": date,
+                    "summary": {
+                        "totalRevenue": 0.0,
+                        "totalTransactions": 0,
+                        "averageOrderValue": 0.0,
+                        "taxCollected": 0.0,
+                        "discountsGiven": 0.0,
+                        "refundsProcessed": 0.0,
+                        "paymentMethods": {
+                            "cash": 0.0,
+                            "card": 0.0
+                        }
                     },
-                    {
-                        "hour": 9,
-                        "revenue": 200.00,
-                        "transactions": 4,
-                        "averageOrderValue": 50.00
-                    }
-                ],
-                "topSellingItems": [
-                    {
-                        "id": "item-uuid-123",
-                        "name": "Latte",
-                        "quantitySold": 15,
-                        "revenue": 225.00
-                    }
-                ],
-                "staffPerformance": [
-                    {
-                        "userId": "user-uuid-123",
-                        "name": "John Cashier",
-                        "transactions": 15,
-                        "revenue": 675.50,
-                        "averageOrderValue": 45.03
-                    }
-                ]
-            }
+                    "hourlyBreakdown": [],  # Could be implemented with additional query
+                    "topSellingItems": [],
+                    "staffPerformance": []
+                }
+            else:
+                # Add empty hourly breakdown for now (could be enhanced)
+                sales_data["hourlyBreakdown"] = []
 
-            self.write_success(mock_data, message="Daily sales report retrieved successfully")
+            self.write_success(sales_data, message="Daily sales report retrieved successfully")
 
         except Exception as e:
             self.write_error_response(["Failed to retrieve daily sales report"], 500, "INTERNAL_ERROR")
 
 
 class EmailDailySummaryHandler(BaseHandler):
+    def initialize(self):
+        self.order_controller = OrderController()
+
     def post(self):
         data = self.get_json_body()
         if data is None:
@@ -178,15 +162,81 @@ class EmailDailySummaryHandler(BaseHandler):
             return
 
         try:
-            # In a real implementation, this would send emails
-            # For now, simulate email sending
-            response_data = {
-                "emailSent": True,
-                "recipients": recipients,
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            }
+            # Get real daily sales data from database
+            daily_sales_data = self.order_controller.get_daily_sales_data(date)
+            
+            if daily_sales_data is None:
+                # Return empty but valid structure if no data
+                daily_sales_data = {
+                    "date": date,
+                    "summary": {
+                        "totalRevenue": 0.0,
+                        "totalTransactions": 0,
+                        "averageOrderValue": 0.0,
+                        "taxCollected": 0.0,
+                        "discountsGiven": 0.0,
+                        "refundsProcessed": 0.0,
+                        "paymentMethods": {
+                            "cash": 0.0,
+                            "card": 0.0
+                        }
+                    },
+                    "topSellingItems": [],
+                    "staffPerformance": []
+                }
 
-            self.write_success(response_data, message="Daily summary email sent successfully")
+            # Send email using the email service
+            email_result = email_service.send_daily_sales_summary(recipients, daily_sales_data, date)
+            
+            if email_result['success']:
+                response_data = {
+                    "emailSent": True,
+                    "recipients": recipients,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "mock": email_result.get('mock', False)
+                }
+                self.write_success(response_data, message="Daily summary email sent successfully")
+            else:
+                self.write_error_response([email_result['message']], 500, "EMAIL_SEND_ERROR")
 
         except Exception as e:
-            self.write_error_response(["Failed to send daily summary email"], 500, "INTERNAL_ERROR")
+            self.write_error_response([f"Failed to send daily summary email: {str(e)}"], 500, "INTERNAL_ERROR")
+
+
+class TestEmailHandler(BaseHandler):
+    """Handler for testing daily email functionality"""
+    
+    async def post(self):
+        """Send a test daily sales email immediately"""
+        data = self.get_json_body()
+        if data is None:
+            return
+        
+        recipients = data.get('recipients', [])
+        
+        if not recipients:
+            self.write_error_response(
+                ["Recipients are required for test email"], 
+                400, 
+                "VALIDATION_ERROR"
+            )
+            return
+        
+        try:
+            # Send test email using scheduler service
+            result = await scheduler_service.send_test_email(recipients)
+            
+            if result['success']:
+                response_data = {
+                    "emailSent": True,
+                    "recipients": recipients,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "mock": result.get('mock', False),
+                    "testMode": True
+                }
+                self.write_success(response_data, message="Test email sent successfully")
+            else:
+                self.write_error_response([result['message']], 500, "EMAIL_TEST_ERROR")
+                
+        except Exception as e:
+            self.write_error_response([f"Failed to send test email: {str(e)}"], 500, "INTERNAL_ERROR")

@@ -8,3 +8,4 @@ python-decouple
 requests
 pyjwt
 bcrypt
+pillow

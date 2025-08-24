@@ -1,5 +1,7 @@
 import tornado.ioloop
 import tornado.web
+import asyncio
+import logging
 
 from apis.menu_api import MenuItemsHandler, MenuItemHandler, MenuItemsBulkImportHandler
 from apis.inventory_api import InventoryItemsHandler, InventoryItemHandler, InventoryAdjustHandler, InventoryExportHandler
@@ -8,13 +10,14 @@ from apis.users_api import UsersHandler, UserHandler
 from apis.orders_api import OrdersHandler, OrderHandler, OrderRefundHandler, OrderReprintReceiptHandler
 from apis.order_items_api import OrderItemsHandler, OrderItemHandler
 from apis.alerts_api import AlertsHandler, AlertHandler
-from apis.auth_api import (
-    AuthLoginHandler, AuthLogoutHandler, AuthMeHandler, AuthRefreshHandler,
-    AuthValidateSessionHandler, AuthPasswordResetRequestHandler, 
-    AuthValidateResetTokenHandler, AuthPasswordResetConfirmHandler
-)
-from apis.reports_api import SalesDashboardHandler, DailySalesHandler, EmailDailySummaryHandler
+from apis.auth_api import AuthLoginHandler, AuthLogoutHandler, AuthMeHandler, AuthRefreshHandler, AuthValidateSessionHandler, AuthPasswordResetRequestHandler, AuthValidateResetTokenHandler, AuthPasswordResetConfirmHandler
+from apis.reports_api import SalesDashboardHandler, DailySalesHandler, EmailDailySummaryHandler, TestEmailHandler
 from apis.system_api import HealthHandler, SettingsHandler
+from apis.upload_api import ImageUploadHandler, ImageServeHandler, BulkImageUploadHandler, ImageManagementHandler
+from services.scheduler_service import scheduler_service
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 
 def make_app():
@@ -64,6 +67,14 @@ def make_app():
         (r"/sales/dashboard", SalesDashboardHandler),
         (r"/reports/daily-sales", DailySalesHandler),
         (r"/reports/email-daily-summary", EmailDailySummaryHandler),
+        (r"/reports/test-email", TestEmailHandler),
+
+        # Image Upload & Management
+        (r"/upload/image", ImageUploadHandler),
+        (r"/upload/bulk-images", BulkImageUploadHandler),
+        (r"/images/management", ImageManagementHandler),
+        (r"/images/management/([0-9a-fA-F-]+)", ImageManagementHandler),
+        (r"/uploads/(.*)", ImageServeHandler, {"path": "uploads"}),
 
         # System
         (r"/health", HealthHandler),
@@ -71,9 +82,19 @@ def make_app():
     ])
 
 
+async def start_services():
+    # Start the scheduler service for daily email reports
+    await scheduler_service.start()
+    print("Daily email scheduler started")
+
+
 if __name__ == "__main__":
     app = make_app()
     app.listen(8880)
 
     print("Server is running on http://localhost:8880")
+    
+    # Schedule the scheduler service to start after the event loop is running
+    tornado.ioloop.IOLoop.current().add_callback(start_services)
+    
     tornado.ioloop.IOLoop.current().start()

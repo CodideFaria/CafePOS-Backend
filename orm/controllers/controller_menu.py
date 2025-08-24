@@ -49,13 +49,16 @@ class MenuController:
                 menu_item = query.first()
                 return None if menu_item is None else self.menu_item_format(menu_item)
 
-    def update_menu_item(self, menu_item_id, **fields):
+    def update_menu_item(self, menu_item_id, fields=None, **kwargs):
         with session_scope() as session:
             menu_item = session.query(MenuItem).filter(MenuItem.id == menu_item_id).first()
             if not menu_item:
                 return None
-            for key, value in fields.items():
-                if hasattr(menu_item, key) and value is not None:
+            
+            # Handle both dictionary and keyword arguments
+            update_fields = fields or kwargs
+            for key, value in update_fields.items():
+                if hasattr(menu_item, key):
                     setattr(menu_item, key, value)
             return self.menu_item_format(menu_item)
 

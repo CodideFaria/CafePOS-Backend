@@ -37,8 +37,8 @@ class Order(Base):
     notes = Column(Text, nullable=True)
     reprint_count = Column(Integer, default=0)
     last_reprint = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     staff = relationship("User")
     order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
