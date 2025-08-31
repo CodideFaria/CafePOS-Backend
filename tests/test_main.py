@@ -2,6 +2,7 @@ import pytest
 import json
 import psycopg2
 import os
+from decouple import config
 
 from main import make_app
 
@@ -12,68 +13,63 @@ def app():
 @pytest.fixture(scope="function", autouse=True)
 async def setup_teardown_db():
     conn = psycopg2.connect(
-        dbname=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD"),
-        host=os.environ.get("DB_HOST", "localhost")
+        dbname=config("POSTGRES_DB"),
+        user=config("POSTGRES_USER"),
+        password=config("POSTGRES_PASSWORD"),
+        host=config("DB_HOST", default="localhost")
     )
     cur = conn.cursor()
-    cur.execute("DELETE FROM prices;")
-    cur.execute("DELETE FROM drinks;")
-    cur.execute("DELETE FROM sizes;")
+    cur.execute("DELETE FROM menu_items WHERE name LIKE 'Test%';")
     conn.commit()
     cur.close()
     conn.close()
     yield
     conn = psycopg2.connect(
-        dbname=os.environ.get("POSTGRES_DB"),
-        user=os.environ.get("POSTGRES_USER"),
-        password=os.environ.get("POSTGRES_PASSWORD"),
-        host=os.environ.get("DB_HOST", "localhost")
+        dbname=config("POSTGRES_DB"),
+        user=config("POSTGRES_USER"),
+        password=config("POSTGRES_PASSWORD"),
+        host=config("DB_HOST", default="localhost")
     )
     cur = conn.cursor()
-    cur.execute("DELETE FROM prices;")
-    cur.execute("DELETE FROM drinks;")
-    cur.execute("DELETE FROM sizes;")
+    cur.execute("DELETE FROM menu_items WHERE name LIKE 'Test%';")
     conn.commit()
     cur.close()
     conn.close()
 
-async def test_get_drinks(http_client):
-    response = await http_client.fetch('http://backend:8888/drinks')
+async def test_get_menu_items(http_client):
+    response = await http_client.fetch('http://localhost:8880/menu_items')
     assert response.code == 200
     data = json.loads(response.body)
-    assert isinstance(data, list)
+    assert isinstance(data['data']['menu_items'], list)
+    assert 'amount' in data['data']
 
-async def test_create_drink(http_client):
-    body = {"name": "Test Drink"}
-    response = await http_client.fetch('http://backend:8888/drinks', method='POST', body=json.dumps(body))
+async def test_create_menu_item(http_client):
+    body = {"name": "Test Drink", "size": "Medium", "price": 3.50}
+    response = await http_client.fetch('http://localhost:8880/menu_items', method='POST', body=json.dumps(body), headers={'Content-Type': 'application/json'})
     assert response.code == 201
     data = json.loads(response.body)
-    assert data['name'] == "Test Drink"
+    assert data['data']['name'] == "Test Drink"
+    assert data['data']['size'] == "Medium"
+    assert data['data']['price'] == 3.50
 
-async def test_search_drinks(http_client):
-    # First, add some drinks to search for
-    await http_client.fetch('http://backend:8888/drinks', method='POST', body=json.dumps({"name": "Latte"}))
-    await http_client.fetch('http://backend:8888/drinks', method='POST', body=json.dumps({"name": "Cappuccino"}))
-    await http_client.fetch('http://backend:8888/drinks', method='POST', body=json.dumps({"name": "Espresso"}))
-
-    response = await http_client.fetch('http://backend:8888/drinks/search?query=latt')
+async def test_menu_items_basic_operations(http_client):
+    # Test getting menu items (we know there are items in the database)
+    response = await http_client.fetch('http://localhost:8880/menu_items')
     assert response.code == 200
     data = json.loads(response.body)
-    assert isinstance(data, list)
-    assert len(data) > 0
-    assert "Latte" in [d[1] for d in data]
-
-    response = await http_client.fetch('http://backend:8888/drinks/search?query=capucino') # Fuzzy search
-    assert response.code == 200
-    data = json.loads(response.body)
-    assert isinstance(data, list)
-    assert len(data) > 0
-    assert "Cappuccino" in [d[1] for d in data]
-
-    response = await http_client.fetch('http://backend:8888/drinks/search?query=') # Test empty query
-    assert response.code == 400
-
-    response = await http_client.fetch('http://backend:8888/drinks/search') # Test missing query parameter
-    assert response.code == 400
+    assert isinstance(data['data']['menu_items'], list)
+    assert len(data['data']['menu_items']) > 0
+    assert 'amount' in data['data']
+    
+    # Check that we have some expected items like "Latte"
+    names = [item['name'] for item in data['data']['menu_items']]
+    assert any("Latte" in name for name in names)
+    
+    # Test getting a specific menu item
+    if data['data']['menu_items']:
+        first_item_id = data['data']['menu_items'][0]['id']
+        response = await http_client.fetch(f'http://localhost:8880/menu_items/{first_item_id}')
+        assert response.code == 200
+        item_data = json.loads(response.body)
+        assert 'data' in item_data
+        assert item_data['data']['id'] == first_item_id

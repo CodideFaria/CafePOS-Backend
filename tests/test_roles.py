@@ -1,7 +1,7 @@
 import requests
 import json
 
-BASE_URL = "http://127.0.0.1:8888"
+BASE_URL = "http://127.0.0.1:8880"
 
 def test_roles():
     print("\n--- Testing Roles ---")
