@@ -14,6 +14,7 @@ from apis.auth_api import AuthLoginHandler, AuthLogoutHandler, AuthMeHandler, Au
 from apis.reports_api import SalesDashboardHandler, DailySalesHandler, EmailDailySummaryHandler, TestEmailHandler
 from apis.system_api import HealthHandler, SettingsHandler
 from apis.upload_api import ImageUploadHandler, ImageServeHandler, BulkImageUploadHandler, ImageManagementHandler
+from apis.printer_api import PrinterTestHandler, PrinterStatusHandler
 from services.scheduler_service import scheduler_service
 
 # Configure logging
@@ -75,6 +76,10 @@ def make_app():
         (r"/images/management", ImageManagementHandler),
         (r"/images/management/([0-9a-fA-F-]+)", ImageManagementHandler),
         (r"/uploads/(.*)", ImageServeHandler, {"path": "uploads"}),
+
+        # Printer
+        (r"/printer/test", PrinterTestHandler),
+        (r"/printer/status", PrinterStatusHandler),
 
         # System
         (r"/health", HealthHandler),

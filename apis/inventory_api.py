@@ -13,6 +13,7 @@ class InventoryItemsHandler(BaseHandler):
     def get(self):
         try:
             inventory_items = self.inventory_controller.get_inventory_items_by_filters(all=True)
+            inventory_items = inventory_items or {"inventory": []}
             
             # Format response according to API specification
             response_data = {

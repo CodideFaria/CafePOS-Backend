@@ -252,9 +252,75 @@ class MenuItemsBulkImportHandler(BaseHandler):
                         errors += 1
                         continue
 
-                    # In a real implementation, check for duplicates and create items
-                    # For now, just count as imported
-                    imported += 1
+                    # Check for existing item
+                    existing_item = None
+                    if skip_duplicates or update_existing:
+                        # Look for existing item by name and size
+                        existing_items = self.menu_controller.get_menu_items_by_filters(all=True)
+                        if existing_items and 'menu_items' in existing_items:
+                            existing_item = next((
+                                item for item in existing_items['menu_items'] 
+                                if item['name'].lower() == name.lower() and item['size'].lower() == size_name.lower()
+                            ), None)
+                    
+                    if existing_item:
+                        if update_existing:
+                            # Update existing item
+                            update_data = {
+                                'description': description,
+                                'category': category,
+                                'price': size_price,
+                                'calories': calories
+                            }
+                            if allergens:
+                                update_data['allergens'] = allergens
+                            if size_volume:
+                                update_data['size_volume'] = size_volume
+                                
+                            updated_item = self.menu_controller.update_menu_item(existing_item['id'], **update_data)
+                            if updated_item:
+                                imported += 1
+                            else:
+                                error_details.append({
+                                    "row": row_num,
+                                    "error": "Failed to update existing item",
+                                    "data": f"{name} - {size_name}"
+                                })
+                                errors += 1
+                        else:
+                            # Skip duplicate
+                            skipped += 1
+                    else:
+                        # Create new item
+                        try:
+                            new_item = self.menu_controller.create_menu_item(
+                                name=name,
+                                size=size_name,
+                                price=size_price,
+                                description=description,
+                                category=category,
+                                calories=calories,
+                                allergens=allergens if allergens else None,
+                                size_volume=size_volume if size_volume else None,
+                                is_active=True,
+                                sort_order=0
+                            )
+                            if new_item:
+                                imported += 1
+                            else:
+                                error_details.append({
+                                    "row": row_num,
+                                    "error": "Failed to create menu item",
+                                    "data": f"{name} - {size_name}"
+                                })
+                                errors += 1
+                        except Exception as create_error:
+                            error_details.append({
+                                "row": row_num,
+                                "error": f"Creation error: {str(create_error)}",
+                                "data": f"{name} - {size_name}"
+                            })
+                            errors += 1
 
                 except Exception as e:
                     error_details.append({

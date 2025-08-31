@@ -6,7 +6,9 @@ from orm.models.model_inventory import InventoryItem
 
 
 class InventoryController:
-    def create_inventory_item(self, name, category, current_stock, min_stock_level=10, unit="pieces"):
+    def create_inventory_item(self, name, category, current_stock, min_stock_level=10, max_stock_level=100, unit="pieces", 
+                             cost_per_unit=0, supplier=None, last_restocked=None, expiry_date=None, barcode=None, 
+                             description=None, location=None):
         with session_scope() as session:
             inventory_item_id = str(uuid.uuid4())
             new_inventory_item = InventoryItem(
@@ -15,7 +17,15 @@ class InventoryController:
                 category=category,
                 current_stock=current_stock,
                 min_stock_level=min_stock_level,
-                unit=unit
+                max_stock_level=max_stock_level,
+                unit=unit,
+                cost_per_unit=cost_per_unit,
+                supplier=supplier,
+                last_restocked=last_restocked,
+                expiry_date=expiry_date,
+                barcode=barcode,
+                description=description,
+                location=location
             )
             session.add(new_inventory_item)
         return self.get_inventory_items_by_filters(id=inventory_item_id)

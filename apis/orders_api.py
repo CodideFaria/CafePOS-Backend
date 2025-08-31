@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 from apis.base_handler import BaseHandler
 from orm.controllers.controller_orders import OrderController
+from services.printer_service import printer_service
 
 
 class OrdersHandler(BaseHandler):
@@ -98,12 +99,19 @@ class OrdersHandler(BaseHandler):
 
             new_order = self.order_controller.create_order(**order_data)
             
+            if not new_order:
+                self.write_error_response(["Failed to create order"], 500, "INTERNAL_ERROR")
+                return
+            
+            # Print receipt automatically
+            print_result = printer_service.print_receipt(new_order, reprint=False)
+            
             # Format response according to API specification
             order_response = {
                 "order": {
                     "id": new_order.get('id'),
-                    "orderNumber": f"ORD-{datetime.now().strftime('%Y-%m-%d')}-{new_order.get('id', '')[:8]}",
-                    "items": items,  # In real implementation, process and store items
+                    "orderNumber": new_order.get('order_number', f"ORD-{datetime.now().strftime('%Y-%m-%d')}-{new_order.get('id', '')[:8]}"),
+                    "items": new_order.get('items', items),
                     "subtotal": subtotal,
                     "taxAmount": tax_amount,
                     "discountAmount": data.get('discountAmount', 0),
@@ -115,11 +123,17 @@ class OrdersHandler(BaseHandler):
                     "customerName": data.get('customerName'),
                     "orderNotes": data.get('orderNotes'),
                     "createdBy": data.get('createdBy'),
-                    "createdAt": datetime.now(timezone.utc).isoformat(),
+                    "createdAt": new_order.get('created_at', datetime.now(timezone.utc).isoformat()),
                     "completedAt": datetime.now(timezone.utc).isoformat()
                 },
                 "inventoryUpdated": True,
-                "receiptGenerated": True
+                "receiptGenerated": print_result.get('success', False),
+                "printResult": {
+                    "printed": print_result.get('printed', False),
+                    "printerType": print_result.get('printer_type', 'unknown'),
+                    "mock": print_result.get('mock', True),
+                    "error": print_result.get('error')
+                }
             }
 
             self.write_success(order_response, 201, "Order created successfully")
@@ -224,15 +238,30 @@ class OrderReprintReceiptHandler(BaseHandler):
                 self.write_error_response(["Order not found"], 404, "NOT_FOUND")
                 return
 
-            # In a real implementation, send receipt to printer
+            # Print receipt using printer service
+            print_result = printer_service.print_receipt(order, reprint=True)
+            
+            # Update reprint count in database (would need to add this field to Order model)
+            # For now, just increment in response
+            current_reprint_count = order.get('reprint_count', 0) + 1
+            
             reprint_data = {
-                "reprinted": True,
-                "originalOrderDate": order.get('createdAt', datetime.now(timezone.utc).isoformat()),
+                "reprinted": print_result.get('success', False),
+                "originalOrderDate": order.get('created_at', datetime.now(timezone.utc).isoformat()),
                 "reprintAllowed": True,
-                "reprintCount": 1  # In real implementation, track reprint count
+                "reprintCount": current_reprint_count,
+                "printResult": {
+                    "printed": print_result.get('printed', False),
+                    "printerType": print_result.get('printer_type', 'unknown'),
+                    "mock": print_result.get('mock', True),
+                    "error": print_result.get('error')
+                }
             }
 
-            self.write_success(reprint_data, message="Receipt reprinted successfully")
+            if print_result.get('success', False):
+                self.write_success(reprint_data, message="Receipt reprinted successfully")
+            else:
+                self.write_error_response([f"Failed to reprint receipt: {print_result.get('error', 'Unknown error')}"], 500, "PRINT_ERROR")
 
         except Exception as e:
             self.write_error_response(["Failed to reprint receipt"], 500, "INTERNAL_ERROR")

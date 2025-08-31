@@ -151,44 +151,96 @@ def seed_users():
     print(f"Created {created_count} users")
 
 def seed_inventory():
-    """Seed inventory items with EUR pricing"""
+    """Seed inventory items with EUR pricing - ingredients and supplies for current menu"""
     print("Seeding inventory with EUR pricing...")
     inventory_controller = InventoryController()
     
     inventory_items = [
         # Coffee & Beans (converted to EUR)
-        {"name": "Arabica Coffee Beans", "category": "Coffee", "current_stock": 50.0, "min_stock_level": 10.0, "max_stock_level": 100.0, 
-         "unit": "kg", "cost_per_unit": convert_usd_to_eur(12.50), "supplier": "Premium Coffee Co", "description": "High-quality arabica beans"},
-        {"name": "Robusta Coffee Beans", "category": "Coffee", "current_stock": 30.0, "min_stock_level": 5.0, "max_stock_level": 50.0,
-         "unit": "kg", "cost_per_unit": convert_usd_to_eur(8.75), "supplier": "Premium Coffee Co", "description": "Strong robusta beans"},
-        {"name": "Decaf Coffee Beans", "category": "Coffee", "current_stock": 15.0, "min_stock_level": 5.0, "max_stock_level": 25.0,
-         "unit": "kg", "cost_per_unit": convert_usd_to_eur(11.25), "supplier": "Premium Coffee Co", "description": "Decaffeinated beans"},
+        {"name": "Arabica Coffee Beans", "category": "Coffee", "current_stock": 45.0, "min_stock_level": 10.0, "max_stock_level": 100.0, 
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(12.50), "supplier": "Premium Coffee Co", "description": "High-quality arabica beans for espresso drinks", "location": "Coffee Storage"},
+        {"name": "Robusta Coffee Beans", "category": "Coffee", "current_stock": 25.0, "min_stock_level": 5.0, "max_stock_level": 50.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(8.75), "supplier": "Premium Coffee Co", "description": "Strong robusta beans for blends", "location": "Coffee Storage"},
+        {"name": "Decaf Coffee Beans", "category": "Coffee", "current_stock": 12.0, "min_stock_level": 5.0, "max_stock_level": 25.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(11.25), "supplier": "Premium Coffee Co", "description": "Decaffeinated beans", "location": "Coffee Storage"},
+        {"name": "Cold Brew Concentrate", "category": "Coffee", "current_stock": 8.0, "min_stock_level": 2.0, "max_stock_level": 15.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(15.00), "supplier": "Cold Brew Co", "description": "Ready-to-use cold brew concentrate", "location": "Refrigerator"},
         
         # Dairy & Milk (converted to EUR)
-        {"name": "Whole Milk", "category": "Dairy", "current_stock": 40.0, "min_stock_level": 10.0, "max_stock_level": 60.0,
-         "unit": "liters", "cost_per_unit": convert_usd_to_eur(1.25), "supplier": "Local Dairy Farm", "description": "Fresh whole milk"},
-        {"name": "Oat Milk", "category": "Dairy", "current_stock": 25.0, "min_stock_level": 5.0, "max_stock_level": 40.0,
-         "unit": "liters", "cost_per_unit": convert_usd_to_eur(2.75), "supplier": "Plant Milk Co", "description": "Organic oat milk"},
-        {"name": "Almond Milk", "category": "Dairy", "current_stock": 20.0, "min_stock_level": 5.0, "max_stock_level": 35.0,
-         "unit": "liters", "cost_per_unit": convert_usd_to_eur(3.25), "supplier": "Plant Milk Co", "description": "Unsweetened almond milk"},
+        {"name": "Whole Milk", "category": "Dairy", "current_stock": 35.0, "min_stock_level": 10.0, "max_stock_level": 60.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(1.25), "supplier": "Local Dairy Farm", "description": "Fresh whole milk for lattes, cappuccinos", "location": "Refrigerator"},
+        {"name": "Oat Milk", "category": "Dairy", "current_stock": 20.0, "min_stock_level": 5.0, "max_stock_level": 40.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(2.75), "supplier": "Plant Milk Co", "description": "Organic oat milk alternative", "location": "Refrigerator"},
+        {"name": "Almond Milk", "category": "Dairy", "current_stock": 15.0, "min_stock_level": 5.0, "max_stock_level": 35.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(3.25), "supplier": "Plant Milk Co", "description": "Unsweetened almond milk", "location": "Refrigerator"},
+        {"name": "Heavy Cream", "category": "Dairy", "current_stock": 8.0, "min_stock_level": 3.0, "max_stock_level": 15.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(3.50), "supplier": "Local Dairy Farm", "description": "Heavy cream for specialty drinks", "location": "Refrigerator"},
         
         # Syrups & Flavoring (converted to EUR)
-        {"name": "Vanilla Syrup", "category": "Syrups", "current_stock": 12.0, "min_stock_level": 3.0, "max_stock_level": 20.0,
-         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(8.95), "supplier": "Flavor House", "description": "Premium vanilla syrup"},
-        {"name": "Caramel Syrup", "category": "Syrups", "current_stock": 10.0, "min_stock_level": 3.0, "max_stock_level": 20.0,
-         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(8.95), "supplier": "Flavor House", "description": "Rich caramel syrup"},
+        {"name": "Vanilla Syrup", "category": "Syrups", "current_stock": 8.0, "min_stock_level": 3.0, "max_stock_level": 20.0,
+         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(8.95), "supplier": "Flavor House", "description": "Premium vanilla syrup", "location": "Syrup Station"},
+        {"name": "Caramel Syrup", "category": "Syrups", "current_stock": 6.0, "min_stock_level": 3.0, "max_stock_level": 20.0,
+         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(8.95), "supplier": "Flavor House", "description": "Rich caramel syrup", "location": "Syrup Station"},
+        {"name": "Chocolate Syrup", "category": "Syrups", "current_stock": 7.0, "min_stock_level": 3.0, "max_stock_level": 20.0,
+         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(9.25), "supplier": "Flavor House", "description": "Premium chocolate syrup for mochas", "location": "Syrup Station"},
+        
+        # Tea & Hot Beverages (converted to EUR)
+        {"name": "Earl Grey Tea", "category": "Tea", "current_stock": 200.0, "min_stock_level": 50.0, "max_stock_level": 500.0,
+         "unit": "tea bags", "cost_per_unit": convert_usd_to_eur(0.12), "supplier": "Premium Tea Co", "description": "Classic bergamot tea", "location": "Tea Storage"},
+        {"name": "Green Tea", "category": "Tea", "current_stock": 180.0, "min_stock_level": 40.0, "max_stock_level": 400.0,
+         "unit": "tea bags", "cost_per_unit": convert_usd_to_eur(0.15), "supplier": "Premium Tea Co", "description": "Premium green tea", "location": "Tea Storage"},
+        {"name": "Chamomile Tea", "category": "Tea", "current_stock": 120.0, "min_stock_level": 30.0, "max_stock_level": 300.0,
+         "unit": "tea bags", "cost_per_unit": convert_usd_to_eur(0.18), "supplier": "Premium Tea Co", "description": "Soothing herbal tea", "location": "Tea Storage"},
+        {"name": "Chai Tea Concentrate", "category": "Tea", "current_stock": 6.0, "min_stock_level": 2.0, "max_stock_level": 12.0,
+         "unit": "liters", "cost_per_unit": convert_usd_to_eur(12.00), "supplier": "Spice Tea Co", "description": "Concentrated chai for lattes", "location": "Refrigerator"},
+        {"name": "Hot Chocolate Mix", "category": "Hot Beverages", "current_stock": 3.0, "min_stock_level": 1.0, "max_stock_level": 8.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(18.50), "supplier": "Chocolate Co", "description": "Premium hot chocolate powder", "location": "Dry Storage"},
         
         # Pastries & Baked Goods (converted to EUR)
-        {"name": "Croissants", "category": "Pastries", "current_stock": 24.0, "min_stock_level": 6.0, "max_stock_level": 50.0,
-         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.25), "supplier": "French Bakery", "description": "Fresh croissants"},
-        {"name": "Muffins", "category": "Pastries", "current_stock": 36.0, "min_stock_level": 12.0, "max_stock_level": 60.0,
-         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.50), "supplier": "Local Bakery", "description": "Assorted muffins"},
+        {"name": "Croissants (Plain)", "category": "Pastries", "current_stock": 18.0, "min_stock_level": 6.0, "max_stock_level": 36.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.20), "supplier": "French Bakery", "description": "Fresh buttery croissants", "location": "Display Case"},
+        {"name": "Almond Croissants", "category": "Pastries", "current_stock": 12.0, "min_stock_level": 4.0, "max_stock_level": 24.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.75), "supplier": "French Bakery", "description": "Croissants with almond cream", "location": "Display Case"},
+        {"name": "Pain au Chocolat", "category": "Pastries", "current_stock": 15.0, "min_stock_level": 5.0, "max_stock_level": 30.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.45), "supplier": "French Bakery", "description": "Chocolate-filled pastries", "location": "Display Case"},
+        {"name": "Blueberry Muffins", "category": "Pastries", "current_stock": 20.0, "min_stock_level": 8.0, "max_stock_level": 40.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.30), "supplier": "Local Bakery", "description": "Fresh blueberry muffins", "location": "Display Case"},
+        {"name": "Chocolate Chip Muffins", "category": "Pastries", "current_stock": 16.0, "min_stock_level": 6.0, "max_stock_level": 32.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.25), "supplier": "Local Bakery", "description": "Classic chocolate chip muffins", "location": "Display Case"},
+        {"name": "Banana Bread", "category": "Pastries", "current_stock": 8.0, "min_stock_level": 3.0, "max_stock_level": 16.0,
+         "unit": "slices", "cost_per_unit": convert_usd_to_eur(1.10), "supplier": "Local Bakery", "description": "Moist banana bread slices", "location": "Display Case"},
+        
+        # Food Ingredients (converted to EUR)
+        {"name": "Bagels", "category": "Food", "current_stock": 24.0, "min_stock_level": 8.0, "max_stock_level": 48.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.95), "supplier": "Bagel Shop", "description": "Fresh bagels for toasting", "location": "Food Storage"},
+        {"name": "Cream Cheese", "category": "Food", "current_stock": 2.0, "min_stock_level": 1.0, "max_stock_level": 5.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(8.50), "supplier": "Dairy Co", "description": "Spread for bagels", "location": "Refrigerator"},
+        {"name": "Avocados", "category": "Food", "current_stock": 15.0, "min_stock_level": 5.0, "max_stock_level": 30.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(1.50), "supplier": "Fresh Produce", "description": "Ripe avocados for toast", "location": "Kitchen"},
+        {"name": "Bread (Sliced)", "category": "Food", "current_stock": 6.0, "min_stock_level": 2.0, "max_stock_level": 12.0,
+         "unit": "loaves", "cost_per_unit": convert_usd_to_eur(2.75), "supplier": "Local Bakery", "description": "Fresh bread for toasting", "location": "Food Storage"},
+        {"name": "Mixed Greens", "category": "Food", "current_stock": 3.0, "min_stock_level": 1.0, "max_stock_level": 6.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(6.50), "supplier": "Fresh Produce", "description": "Fresh salad greens", "location": "Refrigerator"},
+        {"name": "Caesar Dressing", "category": "Food", "current_stock": 2.0, "min_stock_level": 1.0, "max_stock_level": 4.0,
+         "unit": "bottles", "cost_per_unit": convert_usd_to_eur(4.25), "supplier": "Sauce Co", "description": "Caesar salad dressing", "location": "Refrigerator"},
+        {"name": "Granola", "category": "Food", "current_stock": 2.5, "min_stock_level": 1.0, "max_stock_level": 5.0,
+         "unit": "kg", "cost_per_unit": convert_usd_to_eur(12.50), "supplier": "Healthy Foods", "description": "Premium granola mix", "location": "Dry Storage"},
+        {"name": "Greek Yogurt", "category": "Food", "current_stock": 8.0, "min_stock_level": 3.0, "max_stock_level": 15.0,
+         "unit": "containers", "cost_per_unit": convert_usd_to_eur(2.25), "supplier": "Dairy Co", "description": "Plain Greek yogurt", "location": "Refrigerator"},
         
         # Supplies (converted to EUR)
-        {"name": "Paper Cups", "category": "Supplies", "current_stock": 2000.0, "min_stock_level": 500.0, "max_stock_level": 5000.0,
-         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.15), "supplier": "Cup Supply Inc", "description": "8oz disposable cups"},
-        {"name": "Cup Lids", "category": "Supplies", "current_stock": 1800.0, "min_stock_level": 400.0, "max_stock_level": 4000.0,
-         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.08), "supplier": "Cup Supply Inc", "description": "Disposable cup lids"},
+        {"name": "Paper Cups (8oz)", "category": "Supplies", "current_stock": 1500.0, "min_stock_level": 500.0, "max_stock_level": 5000.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.12), "supplier": "Cup Supply Inc", "description": "Small disposable cups", "location": "Supply Room"},
+        {"name": "Paper Cups (12oz)", "category": "Supplies", "current_stock": 2200.0, "min_stock_level": 800.0, "max_stock_level": 6000.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.15), "supplier": "Cup Supply Inc", "description": "Medium disposable cups", "location": "Supply Room"},
+        {"name": "Paper Cups (16oz)", "category": "Supplies", "current_stock": 1800.0, "min_stock_level": 600.0, "max_stock_level": 4000.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.18), "supplier": "Cup Supply Inc", "description": "Large disposable cups", "location": "Supply Room"},
+        {"name": "Cup Lids", "category": "Supplies", "current_stock": 1600.0, "min_stock_level": 400.0, "max_stock_level": 4000.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.08), "supplier": "Cup Supply Inc", "description": "Disposable cup lids", "location": "Supply Room"},
+        {"name": "Paper Napkins", "category": "Supplies", "current_stock": 500.0, "min_stock_level": 100.0, "max_stock_level": 1000.0,
+         "unit": "packs", "cost_per_unit": convert_usd_to_eur(3.50), "supplier": "Paper Co", "description": "Cafe napkins", "location": "Supply Room"},
+        {"name": "Stirring Sticks", "category": "Supplies", "current_stock": 2000.0, "min_stock_level": 500.0, "max_stock_level": 5000.0,
+         "unit": "pieces", "cost_per_unit": convert_usd_to_eur(0.02), "supplier": "Cup Supply Inc", "description": "Wooden stirring sticks", "location": "Supply Room"},
     ]
     
     created_count = 0
@@ -233,9 +285,9 @@ def main():
     
     try:
         # Seed in order of dependencies
-        seed_roles()
-        seed_users()
-        seed_menu_items()
+        # seed_roles()
+        # seed_users()
+        # seed_menu_items()
         seed_inventory()
         
         print("=" * 60)
@@ -243,8 +295,9 @@ def main():
         print("\nProduction Data Summary:")
         print("* 44+ Menu items with EUR pricing and image URLs")
         print("* 5 Users with different roles (admin, manager, cashiers, trainee)")
-        print("* 12+ Inventory items with EUR pricing")
+        print("* 32+ Inventory items with EUR pricing - ingredients & supplies for current menu")
         print("* All prices converted from USD to EUR (1 USD ≈ 0.85 EUR)")
+        print("* Inventory includes coffee beans, milk, syrups, pastries, food ingredients & supplies")
         print("\nTest Login Credentials:")
         print("* Admin: username='admin', password='password123', pin='1234'")
         print("* Manager: username='manager', password='password123', pin='2345'")

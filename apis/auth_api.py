@@ -4,17 +4,16 @@ import bcrypt
 from datetime import datetime, timezone, timedelta
 from decouple import config
 from apis.base_handler import BaseHandler
-from orm.controllers.controller_users import UserController
 
-JWT_SECRET = config('JWT_SECRET', default='your-secret-key-change-in-production')
-JWT_ALGORITHM = 'HS256'
-JWT_EXPIRATION_HOURS = int(config('JWT_EXPIRATION_HOURS', default='8'))
+from orm.controllers.controller_users import UserController
+user_controller = UserController()
+
+JWT_SECRET = config('JWT_SECRET_KEY')
+JWT_ALGORITHM = config('JWT_ALGORITHM')
+JWT_EXPIRE_MINUTES = int(config('JWT_EXPIRE_MINUTES'))
 
 
 class AuthLoginHandler(BaseHandler):
-    def initialize(self):
-        self.user_controller = UserController()
-
     def post(self):
         data = self.get_json_body()
         if data is None:
@@ -37,10 +36,10 @@ class AuthLoginHandler(BaseHandler):
         try:
             if pin_code:
                 # PIN-based authentication
-                user = self.user_controller.authenticate_by_pin(pin_code)
+                user = user_controller.authenticate_by_pin(pin_code)
             else:
                 # Username/password authentication
-                user = self.user_controller.authenticate_by_credentials(username, password)
+                user = user_controller.authenticate_by_credentials(username, password)
 
             if not user:
                 self.write_error_response(
@@ -70,7 +69,7 @@ class AuthLoginHandler(BaseHandler):
                 return
 
             # Generate JWT token
-            expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+            expiration = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
             if remember_me:
                 expiration = datetime.now(timezone.utc) + timedelta(days=30)
 
@@ -85,10 +84,10 @@ class AuthLoginHandler(BaseHandler):
             token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
             # Update last login
-            self.user_controller.update_last_login(user['id'])
+            user_controller.update_last_login(user['id'])
 
             # Get user permissions
-            permissions = self.user_controller.get_user_permissions(user['id'])
+            permissions = user_controller.get_user_permissions(user['id'])
 
             response_data = {
                 "user": {
@@ -143,7 +142,7 @@ class AuthMeHandler(BaseHandler):
             payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
             user_id = payload['user_id']
             
-            user = self.user_controller.get_users_by_filters(id=user_id)
+            user = user_controller.get_users_by_filters(id=user_id)
             if not user:
                 self.write_error_response(
                     ["User not found"], 
@@ -152,7 +151,7 @@ class AuthMeHandler(BaseHandler):
                 )
                 return
 
-            permissions = self.user_controller.get_user_permissions(user_id)
+            permissions = user_controller.get_user_permissions(user_id)
             
             response_data = {
                 "user": {
@@ -211,7 +210,7 @@ class AuthRefreshHandler(BaseHandler):
             user_id = payload['user_id']
             
             # Check if user still exists and is active
-            user = self.user_controller.get_users_by_filters(id=user_id)
+            user = user_controller.get_users_by_filters(id=user_id)
             if not user or not user.get('isActive'):
                 self.write_error_response(
                     ["User not found or inactive"], 
@@ -221,7 +220,7 @@ class AuthRefreshHandler(BaseHandler):
                 return
 
             # Generate new token
-            expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
+            expiration = datetime.now(timezone.utc) + timedelta(minutes=JWT_EXPIRE_MINUTES)
             new_payload = {
                 'user_id': user['id'],
                 'username': user['username'],
@@ -254,9 +253,6 @@ class AuthRefreshHandler(BaseHandler):
 
 
 class AuthValidateSessionHandler(BaseHandler):
-    def initialize(self):
-        self.user_controller = UserController()
-
     def post(self):
         auth_header = self.request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
@@ -273,7 +269,7 @@ class AuthValidateSessionHandler(BaseHandler):
             payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
             user_id = payload['user_id']
             
-            user = self.user_controller.get_users_by_filters(id=user_id)
+            user = user_controller.get_users_by_filters(id=user_id)
             if not user:
                 self.write_error_response(
                     ["User not found"], 
@@ -290,7 +286,7 @@ class AuthValidateSessionHandler(BaseHandler):
                 )
                 return
 
-            permissions = self.user_controller.get_user_permissions(user_id)
+            permissions = user_controller.get_user_permissions(user_id)
             
             response_data = {
                 "user": {
@@ -333,9 +329,6 @@ class AuthValidateSessionHandler(BaseHandler):
 
 
 class AuthPasswordResetRequestHandler(BaseHandler):
-    def initialize(self):
-        self.user_controller = UserController()
-
     def post(self):
         data = self.get_json_body()
         if data is None:
@@ -352,7 +345,7 @@ class AuthPasswordResetRequestHandler(BaseHandler):
 
         try:
             # Check if user with email exists
-            user = self.user_controller.get_users_by_filters(email=email)
+            user = user_controller.get_users_by_filters(email=email)
             
             # Always return success for security (don't reveal if email exists)
             response_data = {
@@ -409,9 +402,6 @@ class AuthValidateResetTokenHandler(BaseHandler):
 
 
 class AuthPasswordResetConfirmHandler(BaseHandler):
-    def initialize(self):
-        self.user_controller = UserController()
-
     def post(self):
         data = self.get_json_body()
         if data is None:

@@ -98,8 +98,8 @@ def seed_users():
         {
             "username": "admin",
             "password": "password123",
-            "first_name": "Admin",
-            "last_name": "User",
+            "first_name": "John",
+            "last_name": "Administrator",
             "email": "admin@cafepos.com",
             "role": UserRole.admin,
             "pin_code": "1234"
@@ -108,37 +108,28 @@ def seed_users():
             "username": "manager",
             "password": "password123",
             "first_name": "Sarah",
-            "last_name": "Johnson",
+            "last_name": "Manager",
             "email": "manager@cafepos.com",
             "role": UserRole.manager,
             "pin_code": "2345"
         },
         {
-            "username": "cashier1",
+            "username": "cashier",
             "password": "password123",
             "first_name": "Mike",
-            "last_name": "Wilson",
-            "email": "mike@cafepos.com",
+            "last_name": "Cashier",
+            "email": "cashier@cafepos.com",
             "role": UserRole.cashier,
             "pin_code": "3456"
         },
         {
-            "username": "cashier2",
-            "password": "password123",
-            "first_name": "Emma",
-            "last_name": "Davis",
-            "email": "emma@cafepos.com",
-            "role": UserRole.cashier,
-            "pin_code": "4567"
-        },
-        {
             "username": "trainee",
             "password": "password123",
-            "first_name": "Alex",
-            "last_name": "Brown",
+            "first_name": "Emma",
+            "last_name": "Trainee",
             "email": "trainee@cafepos.com",
             "role": UserRole.trainee,
-            "pin_code": "5678"
+            "pin_code": "4567"
         }
     ]
     

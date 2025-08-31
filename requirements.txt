@@ -9,3 +9,4 @@ requests
 pyjwt
 bcrypt
 pillow
+python-escpos
